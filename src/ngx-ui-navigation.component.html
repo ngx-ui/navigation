@@ -1,0 +1,14 @@
+<nav *ngIf="navigation" role="navigation">
+    <ul *ngFor="let group of navigation.group">
+      <li>
+        <h3>
+          {{group.header}}
+        </h3>
+      </li>
+      <li *ngFor="let item of group.items" >
+        <a [routerLink]="item.routerLink" routerLinkActive="active-link" [ngClass]="{'disabled': item.disabled}" >
+          {{item.name}}
+        </a>
+      </li>
+    </ul>
+</nav>
