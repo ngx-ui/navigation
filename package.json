@@ -1,6 +1,6 @@
 {
   "name": "@ngx-ui/navigation",
-  "version": "0.1.0-beta",
+  "version": "0.1.1-beta",
   "description": "Angular 2+ simple navigation. ",
   "author": "Ścibor Rudnicki <scibor.rudnicki@wwwdev.io> (http://ngx-ui.wwwwdev.io)",
   "homepage": "https://github.com/ngx-ui/navigation#readme",
