@@ -65,9 +65,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ngx-prism/core.git"
+    "url": "git+https://github.com/ngx-ui/core.git"
   },
   "bugs": {
-    "url": "https://github.com/ngx-prism/core/issues"
+    "url": "https://github.com/ngx-ui/core/issues"
   }
 }
