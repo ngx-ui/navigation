@@ -1,20 +1,43 @@
+// external
 import { Inject, Injectable, Optional } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
+import { Observable } from 'rxjs/Observable';
+
+// internal
 import {
   GroupNavigationInterface,
   NavigationInterface,
   NavigationItemsInterface
 } from './ngx-ui-navigation.interface';
 
+/**
+ * @export
+ * @class NavigationConfig
+ */
 export class NavigationConfig {
   navigations: Array<NavigationInterface>
 };
 
+/**
+ * @export
+ * @class NavigationService
+ */
 @Injectable()
 export class NavigationService {
 
-  navigation: Object = {};
+  /**
+   * Navigation store.
+   * @private
+   * @type {Object}
+   * @memberof NavigationService
+   */
+  private navigation: Object = {};
 
+  /**
+   * Creates an instance of NavigationService.
+   * @param {NavigationConfig} [config]
+   * @memberof NavigationService
+   */
   constructor( @Optional() @Inject(NavigationConfig) config?: NavigationConfig) {
     if (config) {
       config.navigations.forEach(nav => {
@@ -23,18 +46,23 @@ export class NavigationService {
     }
   }
 
-  selectedObservable(name: string) {
+  /**
+   * Get selected navigation item with subscribe.
+   * @param {string} name
+   * @returns {Observable<any>}
+   * @memberof NavigationService
+   */
+  public selectedObservable(name: string): Observable<any> {
     return this.navigation[name].selected.asObservable();
   }
 
   /**
-   * add
    * @param {string} name
    * @param {Array<GroupNavigationInterface>} group
    * @returns {this}
    * @memberof NavigationService
    */
-  add(name: string, group: Array<GroupNavigationInterface>): this {
+  public add(name: string, group: Array<GroupNavigationInterface>): this {
     if (name && group) {
       if (!this.navigation[name]) {
         this.navigation[name] = {
@@ -51,26 +79,22 @@ export class NavigationService {
   }
 
   /**
-   * delete
    * @param {string} name
    * @returns {boolean}
    * @memberof NavigationService
    */
-  delete(name: string): boolean {
+  public delete(name: string): boolean {
     return true;
   }
 
   /**
-   * select
    * @private
    * @param {string} name
+   * @param {Object} select
    * @memberof NavigationService
    */
-  private select(name: string, itemName: string, routerLink: string): void {
-    this.navigation[name].selected.next({
-      itemName,
-      routerLink
-    });
+  private select(name: string, select: Object): void {
+    this.navigation[name].selected.next(select);
   }
 
   /**
@@ -79,14 +103,14 @@ export class NavigationService {
    * @returns {NavigationInterface}
    * @memberof NavigationService
    */
-  get(name: string): NavigationInterface | undefined {
+  public get(name: string): NavigationInterface | undefined {
     if (name) {
       return this.navigation[name];
     }
   }
 
   /**
-   * items
+   * Return array list of items from navigation specified by name.
    * @param {string} name
    * @returns {NavigationItemsInterface}
    * @memberof NavigationService
@@ -96,16 +120,16 @@ export class NavigationService {
   }
 
   /**
-   * selectByUrl
+   * @param {string} name
    * @param {string} url
    * @memberof NavigationService
    */
-  selectByUrl(name: string, url: string): void {
+  public selectByUrl(name: string, url: string): void {
     if (this.navigation[name]) {
       this.navigation[name].group.forEach( (group: any) => {
         group.items.forEach( (item: any) => {
           if (item.routerLink === url) {
-            this.select(name, item.name, item.routerLink);
+            this.select(name, { [group.header]: item });
           }
         });
       });
