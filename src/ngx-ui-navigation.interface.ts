@@ -1,18 +1,44 @@
-export type ItemsType = Array<NavigationItemsInterface>;
 export interface NavigationItemsInterface {
-  icon?: string;
-  name: string;
   description?: string;
-  routerLink: string;
   disabled?: boolean;
-  new?: number;
+  hidden?: boolean;
+  icon?: string;
+  image?: string;
+  items?: ItemsType;
+  name: string;
+  routerLink: string;
+  selected?: boolean;
+  sort?: {
+    by: 'description' | 'disabled' | 'hidden' | 'items' | 'name' | 'selected',
+    type: 'asc' | 'desc'
+  };
 }
-export interface GroupNavigationInterface {
-  header: string;
+export type ItemsType = Array<NavigationItemsInterface>;
+
+export interface NavigationInterface {
+  readonly selected?: any;
+  name: string;
   items: ItemsType;
 }
-export interface NavigationInterface {
+export interface NavigationConfigInterface {
+  navigations: {
+    [index: string]: NavigationInterface
+  }
+}
+
+export interface SelectedInterface {
   name: string;
-  selected?: any;
-  group: Array<GroupNavigationInterface>;
+  selected: {
+    name: string;
+    routerLink: string;
+    icon?: string;
+    description?: string;
+    selected?: {
+      name: string;
+      routerLink: string;
+      selected?: boolean;
+      icon?: string;
+      description?: string;
+    }
+  };
 }
