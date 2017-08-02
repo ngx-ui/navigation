@@ -1,13 +1,14 @@
+<!-- ngx-ui-navigation -->
 <nav *ngIf="navigation" role="navigation">
-    <ul *ngFor="let group of navigation.group">
+    <ul *ngFor="let menu of navigation.items">
       <li>
         <h3>
-          {{group.header}}
+          {{menu.name}}
         </h3>
       </li>
-      <li *ngFor="let item of group.items" >
-        <a [routerLink]="item.routerLink" routerLinkActive="active-link" [ngClass]="{'disabled': item.disabled}" >
-          {{item.name}}
+      <li *ngFor="let submenu of menu.items" >
+        <a [routerLink]="submenu.routerLink" routerLinkActive="active-link" [ngClass]="{'disabled': submenu.disabled}" >
+          {{submenu.name}}
         </a>
       </li>
     </ul>
