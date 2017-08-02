@@ -1,5 +1,5 @@
 // externals
-import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 
 // internals
@@ -17,15 +17,16 @@ import template from './ngx-ui-navigation.component.html';
   selector: 'ngx-ui-navigation',
   template
 })
-export class NavigationComponent implements OnInit {
+export class NavigationComponent implements AfterViewInit, OnInit {
   @Input() name: string;
+  @Output() selected: EventEmitter<any> = new EventEmitter();
 
   /**
-   * Get navigation with inputted name.
+   * Navigation holder.
    * @type {(Object | undefined)}
    * @memberof NavigationComponent
    */
-  navigation: Object | undefined;
+  public navigation: Object | undefined;
 
   /**
    * Creates an instance of NavigationComponent.
@@ -37,6 +38,13 @@ export class NavigationComponent implements OnInit {
     private navigationService: NavigationService,
     private router: Router
   ) { }
+
+  /**
+   * @memberof NavigationComponent
+   */
+  ngAfterViewInit() {
+    this.navigationService.selectByUrl(this.name, this.router.url);
+  }
 
   /**
    * @memberof NavigationComponent
