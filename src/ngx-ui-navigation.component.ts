@@ -58,6 +58,7 @@ export class NavigationComponent implements AfterViewInit, OnInit {
         (value) => {
           if (value instanceof NavigationEnd) {
             this.navigationService.selectByUrl(this.name, value.url);
+            this.selected.emit(this.selected);
           }
         }
       );
