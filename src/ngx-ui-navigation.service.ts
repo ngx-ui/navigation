@@ -5,7 +5,8 @@ import { Observable } from 'rxjs/Observable';
 
 // internal
 import {
-  GroupNavigationInterface,
+  ItemsType,
+  NavigationConfigInterface,
   NavigationInterface,
   NavigationItemsInterface
 } from './ngx-ui-navigation.interface';
@@ -13,9 +14,13 @@ import {
 /**
  * @export
  * @class NavigationConfig
+ * @implements {NavigationConfigInterface}
  */
-export class NavigationConfig {
-  navigations: Array<NavigationInterface>
+@Injectable()
+export class NavigationConfig implements NavigationConfigInterface {
+  navigations: {
+    [index: string]: NavigationInterface
+  }
 };
 
 /**
@@ -24,14 +29,18 @@ export class NavigationConfig {
  */
 @Injectable()
 export class NavigationService {
+  public selected: any;
 
   /**
-   * Navigation store.
    * @private
-   * @type {Object}
+   * @type {{
+   *     [index: string]: NavigationInterface
+   *   }}
    * @memberof NavigationService
    */
-  private navigation: Object = {};
+  private navigation: {
+    [index: string]: NavigationInterface
+  } = {};
 
   /**
    * Creates an instance of NavigationService.
@@ -39,69 +48,109 @@ export class NavigationService {
    * @memberof NavigationService
    */
   constructor( @Optional() @Inject(NavigationConfig) config?: NavigationConfig) {
-    if (config) {
-      config.navigations.forEach(nav => {
-        this.add(nav.name, nav.group);
-      });
-    }
-  }
-
-  /**
-   * Get selected navigation item with subscribe.
-   * @param {string} name
-   * @returns {Observable<any>}
-   * @memberof NavigationService
-   */
-  public selectedObservable(name: string): Observable<any> {
-    return this.navigation[name].selected.asObservable();
-  }
-
-  /**
-   * @param {string} name
-   * @param {Array<GroupNavigationInterface>} group
-   * @returns {this}
-   * @memberof NavigationService
-   */
-  public add(name: string, group: Array<GroupNavigationInterface>): this {
-    if (name && group) {
-      if (!this.navigation[name]) {
-        this.navigation[name] = {
-          selected: new Subject<{ routerLink: string }>(),
-          group: []
-        };
-      }
-      // add items to specific navigation name
-      group.forEach((g: GroupNavigationInterface, key) => {
-        this.navigation[name].group.push(g);
-      });
-    }
-    return this;
-  }
-
-  /**
-   * @param {string} name
-   * @returns {boolean}
-   * @memberof NavigationService
-   */
-  public delete(name: string): boolean {
-    return true;
+    this.init(config);
   }
 
   /**
    * @private
    * @param {string} name
-   * @param {Object} select
+   * @param {boolean} [value]
+   * @param {string} [url]
+   * @returns {this}
    * @memberof NavigationService
    */
-  private select(name: string, select: Object): void {
-    this.navigation[name].selected.next(select);
+  private setSelected(name: string, value?: boolean, url?: string): this {
+    if (this.navigation[name]) {
+      this.select(name, {});
+
+      // Mark as selected when value and url
+      if (this.navigation[name].hasOwnProperty('items')) {
+        this.navigation[name].items.map((menu: NavigationItemsInterface) => {
+          menu.selected = false;
+          if (menu.items && menu.hasOwnProperty('items')) {
+            menu.items.map((submenu: NavigationItemsInterface) => {
+              submenu.selected = false
+              if (submenu.routerLink === url && submenu.disabled !== true && submenu.hidden !== true) {
+                submenu.selected = value;
+                menu.selected = value;
+              }
+              return submenu;
+            });
+            return menu;
+          }
+        });
+
+        // Filter by selected true
+        const menuSelected = this.navigation[name].items
+          .filter((menu: NavigationItemsInterface) => menu.selected === value)
+          .map((menu: NavigationItemsInterface, index) => menu)[0];
+
+        if (menuSelected && menuSelected.items) {
+          const submenuSelected = menuSelected.items
+            .filter((submenu: NavigationItemsInterface) => submenu.selected === value)
+            .map((submenu: NavigationItemsInterface) => submenu)[0];
+
+          this.select(name, Object.assign({}, menuSelected, { selected: submenuSelected }));
+        }
+      }
+    }
+    return this;
+  }
+
+
+  /**
+   * @private
+   * @param {NavigationConfig} [config]
+   * @memberof NavigationService
+   */
+  private init(config?: NavigationConfig): void {
+    if (config) {
+      for (const type in config) {
+        if (config.hasOwnProperty(type)) {
+          if (type === 'navigations') {
+            for (const nav in config[type]) {
+              if (config[type].hasOwnProperty(nav)) {
+                this.navigation[nav] = Object.assign(
+                  { selected: new Subject<{ routerLink: string }>() },
+                  config[type][nav]
+                )
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
-   * get
+   * @private
    * @param {string} name
-   * @returns {NavigationInterface}
+   * @param {*} selected
    * @memberof NavigationService
+   */
+  private select(name: string, selected: any): void {
+    delete selected.items;
+    this.selected = Object.assign({}, {
+      name: this.navigation[name].name,
+      selected
+    });
+    this.navigation[name].selected.next(this.selected);
+  }
+
+  /**
+   * Get selected navigation item with subscribe.
+   * @param {string} name
+   * @returns {Observable<NavigationItemsInterface>}
+   * @memberof NavigationService
+   */
+  public selectedObservable(name: string): Observable<NavigationItemsInterface> {
+    return this.navigation[name].selected.asObservable();
+  }
+
+  /**
+   * @param {string} name
+   * @returns {(NavigationInterface | undefined)}
+   * @memberof NavigationServassice
    */
   public get(name: string): NavigationInterface | undefined {
     if (name) {
@@ -110,29 +159,11 @@ export class NavigationService {
   }
 
   /**
-   * Return array list of items from navigation specified by name.
-   * @param {string} name
-   * @returns {NavigationItemsInterface}
-   * @memberof NavigationService
-   */
-  items(name: string): NavigationItemsInterface {
-    return this.navigation[name].items;
-  }
-
-  /**
    * @param {string} name
    * @param {string} url
    * @memberof NavigationService
    */
-  public selectByUrl(name: string, url: string): void {
-    if (this.navigation[name]) {
-      this.navigation[name].group.forEach( (group: any) => {
-        group.items.forEach( (item: any) => {
-          if (item.routerLink === url) {
-            this.select(name, { [group.header]: item });
-          }
-        });
-      });
-    }
+  public selectByUrl(name: string, url?: string): void {
+    this.setSelected(name, true, url);
   }
 }
